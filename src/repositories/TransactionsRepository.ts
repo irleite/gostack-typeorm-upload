@@ -10,8 +10,24 @@ interface Balance {
 
 @EntityRepository(Transaction)
 class TransactionsRepository extends Repository<Transaction> {
+  private async GetSumValues(type: string): Promise<number> {
+    const { value } = await this.createQueryBuilder('transaction')
+      .select('SUM(transaction.value)', 'value')
+      .where(' type = :type', { type })
+      .getRawOne();
+    return value || 0;
+  }
+
   public async getBalance(): Promise<Balance> {
-    // TODO
+    const income = (await this.GetSumValues('income')) as number;
+    const outcome = (await this.GetSumValues('outcome')) as number;
+
+    const total = income - outcome;
+    return {
+      income,
+      outcome,
+      total,
+    };
   }
 }
 
